@@ -21,7 +21,7 @@ public class Main {
                 } else if (parts[0].equals("get")) {
                     int i = Integer.parseInt(parts[1]);
                     int value = a.get(a, i);
-                    //System.out.println(value);
+                    System.out.println(value);
                 }
             }
         } catch (IOException e) {

@@ -25,48 +25,38 @@ public class Array {
         Array a = new Array();
         Node root = new Node();
         stack.push(root);
-        a.stack = this.stack;
         return a;
     }
 
     public Array set(Array a, int i, int value) {
         Node oldRoot = a.stack.peek();
-        Node newRoot;
+        Node newRoot = new Node();
         Node start;
 
-        int height = getHeight(oldRoot.right);
+        int height = height(oldRoot.right);
 
-        if  (oldRoot.value < i) {
-            newRoot = new Node(i);
+        //System.out.println(height);
+        //System.out.println(i + " " + (1 << height-1));
+        if (height == 0 && i == 0) {
+            newRoot.right = new Node(value);
+            a.stack.push(newRoot);
+            return a;
+        } else if (i >= (1 << height-1)) {
+            //System.out.println("väx");
             newRoot.right = new Node();
-            newRoot.right.left = oldRoot.right;
-            newRoot.right.right = new Node();
-            start = newRoot.right.right;
-            oldRoot = null;
+            Node temp = newRoot.right;
+            if (oldRoot.right != null) {
+                while (i >= (1 << height-1)) {
+                    temp.left = new Node();
+                    temp = temp.left;
+                    height++;
+                }
+                temp.left = oldRoot.right;
+            }
+            setRec(i, value, null, newRoot.right, height-1);
         } else {
-            newRoot = new Node(oldRoot.value);
             newRoot.right = new Node();
-            start = newRoot.right;
-        }
-
-        if ((i & (1 << height)) == 0) {
-            start.left = new Node();
-            try {
-                start.right = oldRoot.right.right;
-                setRec(i, value, oldRoot.left, start.left, height);
-            } catch (NullPointerException e) {
-                start.right = null;
-                setRec(i, value, null, start.left, height);
-            }
-        } else {
-            start.right = new Node();
-            try {
-                start.left = oldRoot.right.left;
-                setRec(i, value, oldRoot.right, start.right, height);
-            } catch (NullPointerException e) {
-                start.left = null;
-                setRec(i, value, null, start.right, height);
-            }
+            setRec(i, value, oldRoot.right, newRoot.right, height-1);
         }
 
         a.stack.push(newRoot);
@@ -75,50 +65,50 @@ public class Array {
 
     public void setRec(int i, int value, Node currentOld, Node currentNew, int height) {
         if (height == 0) {
+            //System.out.println("klar");
             currentNew.value = value;
             return;
-        } else {
-            if ((i & (1 << (height))) == 0) {
+        } else if (currentOld == null) {
+            //System.out.println("null");
+            if ((i & (1 << (height-1))) == 0) {
                 currentNew.left = new Node();
-                try {
-                    currentNew.right = currentOld.right;
-                    setRec(i, value, currentOld.left, currentNew.left, height-1);
-                } catch (NullPointerException e) {
-                    currentNew.right = null;
-                    setRec(i, value, null, currentNew.left, height-1);
-                }         
+                setRec(i, value, null, currentNew.left, height-1);   
             } else {
                 currentNew.right = new Node();
-                try {
-                    currentNew.left = currentOld.left;
-                    setRec(i, value, currentOld.right, currentNew.right, height-1);
-                } catch (NullPointerException e) {
-                    currentNew.left = null;
-                    setRec(i, value, null, currentNew.right, height-1);
-                }
+                setRec(i, value, null, currentNew.right, height-1);
+            }
+        } else {
+            //System.out.println("rekursion");
+            if ((i & (1 << (height-1))) == 0) {
+                System.out.println("l");
+                currentNew.left = new Node();
+                currentNew.right = currentOld.right;
+                setRec(i, value, currentOld.left, currentNew.left, height-1);   
+            } else {
+                System.out.println("r");
+                currentNew.right = new Node();
+                currentNew.left = currentOld.left;
+                setRec(i, value, currentOld.right, currentNew.right, height-1);
             }
         }
     }
 
-    public int getHeight(Node n) {
-        if (n == null) return 0;
-        return height(n);
-    }
-
     public int height(Node n) {
-        if (n == null) return -1;
+        if (n == null) return 0;
         return 1 + Math.max(height(n.left), height(n.right));
     }
 
     public int get(Array a, int i) {
         Node current = a.stack.peek();
         if (current == null) return 0;
-        int height = getHeight(current.right);
+        int height = height(current.right);
 
         for (int h = height; h > 0; h--) {
-            if ((i & (1 << h)) == 0) {
+            if ((i & (1 << h-1)) == 0) {
+                System.out.println("left");
                 current = current.left;
             } else {
+                System.out.println("right");
                 current = current.right;
             }
             if (current == null) return 0;
