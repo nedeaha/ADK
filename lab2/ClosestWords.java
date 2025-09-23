@@ -1,6 +1,7 @@
 /* Labb 2 i DD2350 Algoritmer, datastrukturer och komplexitet    */
 /* Se labbinstruktionerna i kursrummet i Canvas                  */
 /* Ursprunglig författare: Viggo Kann KTH viggo@nada.kth.se      */
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -9,43 +10,35 @@ public class ClosestWords {
 
   int closestDistance = -1;
 
-  int[][] prevM = null;
+  ArrayList<int[]> matrix = null;
 
-  int partDist(String w1, String w2, int w1len, int w2len, String p) {
-    int[][] matrix = new int[w2len+1][w1len+1];
-
-    int n = 1;
-    if (p != null && w2 != null && prevM != null) {
-      while (n < prevM.length && w2.charAt(n-1) == p.charAt(n-1)) {
-          matrix[n] = prevM[n];
-          n++;
-      }
-    }
-    
-    for (int i = n; i <= w2len; i++) {
-        matrix[i][0] = i;
-    }
-
-    if (n == 1) {
+  int partDist(String w1, String w2, int w1len, int w2len, int n) {
+    if (matrix == null) {
+      matrix = new ArrayList<int[]>();
+      matrix.add(new int[w1len + 1]);
       for (int j = 0; j <= w1len; j++) {
-          matrix[0][j] = j;
+        matrix.get(0)[j] = j;
       }
+    }
+
+    for (int i = matrix.size(); i <= w2len; i++) {
+      matrix.add(new int[w1len + 1]);
+      matrix.get(i)[0] = i;
     }
 
     for (int i = n; i <= w2len; i++) {
       for (int j = 1; j <= w1len; j++) {
         if (w2.charAt(i - 1) == w1.charAt(j - 1)) {
-          matrix[i][j] = matrix[i - 1][j - 1];
+          matrix.get(i)[j] = matrix.get(i-1)[j - 1];
         } else {
-          matrix[i][j] = Math.min(Math.min(matrix[i - 1][j], // Deletion
-              matrix[i][j - 1]), // Insertion
-              matrix[i - 1][j - 1]) + 1; // Substitution
+          matrix.get(i)[j] = Math.min(Math.min(matrix.get(i-1)[j],
+              matrix.get(i)[j - 1]),
+              matrix.get(i-1)[j - 1]) + 1;
         }
       }
     } 
 
-    prevM = matrix;
-    return matrix[w2len][w1len];
+    return matrix.get(w2len)[w1len];
   }
 
   // int oldPartDist(String w1, String w2, int w1len, int w2len) {
@@ -84,16 +77,22 @@ public class ClosestWords {
   //   return res;
   // }
 
-  int distance(String w1, String w2, String p) {
-    return partDist(w1, w2, w1.length(), w2.length(), p);
+  int distance(String w1, String w2, int n) {
+    return partDist(w1, w2, w1.length(), w2.length(), n);
   }
 
   public ClosestWords(String w, List<String> wordList) {
     String p = null;
-    prevM = null;
+    int n = 1;
 
     for (String s : wordList) {
-      int dist = distance(w, s, p);
+      while (p != null && s.startsWith(p)) {
+        p = p.substring(0, p.length() - 1);
+      }
+      if (p != null) {
+        n = p.length() + 1;
+      }
+      int dist = distance(w, s, n);
       // System.out.println("d(" + w + "," + s + ")=" + dist);
       if (dist < closestDistance || closestDistance == -1) {
         closestDistance = dist;
@@ -104,7 +103,6 @@ public class ClosestWords {
 
         closestWords.add(s);
       } 
-    p = s;
     }
   }
 
