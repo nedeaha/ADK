@@ -1,7 +1,6 @@
 /* Labb 2 i DD2350 Algoritmer, datastrukturer och komplexitet    */
 /* Se labbinstruktionerna i kursrummet i Canvas                  */
 /* Ursprunglig författare: Viggo Kann KTH viggo@nada.kth.se      */
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -10,35 +9,22 @@ public class ClosestWords {
 
   int closestDistance = -1;
 
-  ArrayList<int[]> matrix = null;
+  int[][] matrix = null;
 
   int partDist(String w1, String w2, int w1len, int w2len, int n) {
-    if (matrix == null) {
-      matrix = new ArrayList<int[]>();
-      matrix.add(new int[w1len + 1]);
-      for (int j = 0; j <= w1len; j++) {
-        matrix.get(0)[j] = j;
-      }
-    }
-
-    for (int i = matrix.size(); i <= w2len; i++) {
-      matrix.add(new int[w1len + 1]);
-      matrix.get(i)[0] = i;
-    }
-
     for (int i = n; i <= w2len; i++) {
       for (int j = 1; j <= w1len; j++) {
         if (w2.charAt(i - 1) == w1.charAt(j - 1)) {
-          matrix.get(i)[j] = matrix.get(i-1)[j - 1];
+          matrix[i][j] = matrix[i - 1][j - 1];
         } else {
-          matrix.get(i)[j] = Math.min(Math.min(matrix.get(i-1)[j],
-              matrix.get(i)[j - 1]),
-              matrix.get(i-1)[j - 1]) + 1;
+          matrix[i][j] = Math.min(Math.min(matrix[i - 1][j], // Deletion
+              matrix[i][j - 1]), // Insertion
+              matrix[i - 1][j - 1]) + 1; // Substitution
         }
-      }
-    } 
+      } 
+    }
 
-    return matrix.get(w2len)[w1len];
+    return matrix[w2len][w1len];
   }
 
   // int oldPartDist(String w1, String w2, int w1len, int w2len) {
@@ -84,15 +70,51 @@ public class ClosestWords {
   public ClosestWords(String w, List<String> wordList) {
     String p = null;
     int n = 1;
+    int maxLen = 0;
 
     for (String s : wordList) {
-      while (p != null && s.startsWith(p)) {
+      if (maxLen < s.length()) {
+        maxLen = s.length();
+      }
+    }
+
+    matrix = new int[maxLen + 1][w.length() + 1];
+
+    for (int j = 0; j <= w.length(); j++) {
+      matrix[0][j] = j;
+    } 
+
+    for (int i = 1; i <= maxLen; i++) {
+      matrix[i][0] = i;
+    }
+
+    for (String s : wordList) {
+      
+      if (Math.abs(s.length() - w.length()) > closestDistance && closestDistance != -1) continue;
+      
+      // if (w.length() == s.length()) {
+      //   int sum = 0;
+      //   for (int i = 0; i < w.length(); i++) {
+      //       if (w.charAt(i) != s.charAt(i)) {
+      //           sum++;
+      //       }
+      //   }
+      //   if (sum >= closestDistance && closestDistance != -1) continue;
+      // }
+
+      while (p != null && !s.startsWith(p) && p.length() > 0) {
         p = p.substring(0, p.length() - 1);
       }
+
       if (p != null) {
         n = p.length() + 1;
+      } else {
+        n = 1;
+        p = s;
       }
+      
       int dist = distance(w, s, n);
+
       // System.out.println("d(" + w + "," + s + ")=" + dist);
       if (dist < closestDistance || closestDistance == -1) {
         closestDistance = dist;
@@ -100,7 +122,6 @@ public class ClosestWords {
         closestWords.add(s);
       }
       else if (dist == closestDistance) {
-
         closestWords.add(s);
       } 
     }
